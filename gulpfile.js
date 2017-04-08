@@ -2,22 +2,29 @@ var gulp = require('gulp'),
  	fileinclude = require('gulp-file-include'),
  	sass = require('gulp-sass'),
  	htmlhint  = require('gulp-htmlhint'),
- 	csslint = require('gulp-csslint'),
+    csslint = require('gulp-csslint'),
+    webreporter = require('gulp-hint-web-reporter'),
+    gutil = require('gulp-util'),
+    sourcemaps = require('gulp-sourcemaps'),
 	browserSync = require('browser-sync');
+
+const autoprefixer = require('gulp-autoprefixer');
 
 gulp.task('sass', function () {
   return gulp.src('src/module/**/*.scss')
-    .pipe(sass().on('error', sass.logError))
+    .pipe(sourcemaps.init())
+    .pipe(sass({outputStyle: 'expanded'}).on('error', sass.logError))
+    .pipe(sourcemaps.write('./maps'))
     .pipe(gulp.dest('src/css'));
 });
 
 gulp.task('watch', function () {
 	gulp.watch('src/module/**/*.scss', ['sass']);
-	gulp.watch('src/markup/**/*.scss', ['fileinclude']);
+	gulp.watch('src/markup/*.html', 'src/module/**/*.html', ['fileinclude']);
 });
 
 gulp.task('fileinclude', function() {
-  gulp.src(['src/markup/**/.html'])
+  gulp.src(['src/markup/*.html','src/module/**/*.html'])
     .pipe(fileinclude({
       prefix: '@@',
       basepath: '@file'
@@ -25,22 +32,13 @@ gulp.task('fileinclude', function() {
     .pipe(gulp.dest('src/result'));
 });
 
-gulp.src("src/result/**/*.html")
-    .pipe(htmlhint())
-    .pipe(htmlhint.reporter())
-
-gulp.task('css', function() {
-  gulp.src('src/css/*.css')
-    .pipe(csslint())
-    .pipe(csslint.formatter());
+gulp.task('browser-sync', function() {
+    browserSync({
+        files: ["src/module/**/*.*","src/markup/*.*"],
+        proxy: "http://localhost:80/dev/wordpress_project",
+        open: 'external',
+        logprefix: "bs"
+    });
 });
 
-gulp.task('browser-sync', () => {
-    browserSync.init(null, {
-        proxy: "http://localhost:3000",
-        files: ["dist/**/*.*"],
-        port: 7000
-    })
-});
-
-gulp.task('default', ['watch','fileinclude','browser-sync','css']);
+gulp.task('default', ['watch','fileinclude','browser-sync']);

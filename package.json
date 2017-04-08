@@ -2,15 +2,24 @@
   "name": "wordpress_project",
   "version": "1.0.0",
   "description": "",
-  "main": "",
+  "main": "index.js",
   "author": "",
   "license": "ISC",
+  "repository": {
+      "type":"git",
+      "url": "https://github.com/qkrwlgnstm/wordpress_project.git"
+  },
   "devDependencies": {
     "browser-sync": "^2.18.8",
     "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.1",
     "gulp-csslint": "^1.0.0",
     "gulp-file-include": "^1.1.0",
     "gulp-htmlhint": "^0.3.1",
-    "gulp-sass": "^3.1.0"
+    "gulp-sass": "^3.1.0",
+    "gulp-util": "^3.0.8",
+    "gulp-hint-web-reporter": "^1.1.4",
+    "gulp-sourcemaps": "^2.4.1",
+    "sass-convert": "^0.5.2"
   }
 }
