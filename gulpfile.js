@@ -8,7 +8,8 @@ var gulp = require('gulp'),
     sourcemaps = require('gulp-sourcemaps'),
     jslint = require('gulp-jslint'),
     concat = require('gulp-concat'),
-    clone = require('gulp-clone');
+    clone = require('gulp-clone'),
+    uglify = require('gulp-uglifyjs');
 
 const autoprefixer = require('gulp-autoprefixer');
 
@@ -17,33 +18,41 @@ gulp.task('clean', function () {
         .pipe(clean());
 });
 
+gulp.task('uglify', ['clean'], function() {
+  gulp.src('src/js/**/*.js')
+    .pipe(uglify())
+    .pipe(gulp.dest('src/result/js'))
+});
+
 gulp.task('htmlHint', function() {
   return gulp.src('src/html/**/')
-    .pipe(htmlhint())
+  .on('error', function(err) {})
     .pipe(htmlhint.reporter());
 });
 
 gulp.task('jslint', function() {
-  return gulp.src('src/js/**/')
+  return gulp.src('src/js/**/*.js')
+  .on('error', function(err) {})
     .pipe(jslint())
-    .pipe(jslint.reporter());
+    .pipe(jslint.reporter('default'));
 });
 
-gulp.task('clone', function (cb) {
- return gulp.src(['src/img/**/', 'src/js/**/'])
+gulp.task('clone', ['clean'], function (cb) {
+ return gulp.src('src/asset/**/')
    .pipe(clone())
- .pipe(gulp.dest('src/result/**/'));
+ .pipe(gulp.dest('src/result'));
 });
 
 //변경 scss
 gulp.task('sassLint', function() {
   return gulp.src('src/scss/**/')
+  .on('error', function(err) {})
     .pipe(sassLint())
     .pipe(sassLint.format())
     .pipe(sassLint.failOnError());
 });
 
-gulp.task('sass', function () {
+gulp.task('sass', ['clean'], function () {
   return gulp.src('src/scss/**/')
     .pipe(sourcemaps.init())
       .pipe(sass({outputStyle: 'expanded'}).on('error', sass.logError))
@@ -51,15 +60,17 @@ gulp.task('sass', function () {
     .pipe(gulp.dest('src/result/css'));
 });
 
-gulp.task('watch', function () {
+gulp.task('watch', ['build'], function () {
     gulp.watch('src/html/**/*.html', ['htmlHint']);
+    gulp.watch('src/js/**/*.js', ['jslint']);
     gulp.watch('src/scss/**/*.scss', ['sassLint']);
-    gulp.watch('src/scss/**/*.scss', ['sass']);
+    gulp.watch('src/scss/**/', ['sass']);
 	gulp.watch(['src/html/**/*.html','!src/html/include/**'] , ['fileinclude']);
-    gulp.watch(['src/img/**/', 'src/js/**/'] , ['clone']);
+    gulp.watch('src/js/**/*.js' , ['uglify']);
+    gulp.watch('src/asset/**/' , ['clone']);
 });
 
-gulp.task('fileinclude', function() {
+gulp.task('fileinclude', ['clean'], function() {
   gulp.src(['src/html/**/*.html','!src/html/include/**'])
     .pipe(fileinclude({
       prefix: '@@',
@@ -68,4 +79,8 @@ gulp.task('fileinclude', function() {
     .pipe(gulp.dest('src/result/html'));
 });
 
-gulp.task('default', ['clean', 'sass', 'fileinclude', 'clone', 'watch']);
+gulp.task('build', ['sass', 'htmlHint', 'jslint', 'sassLint', 'fileinclude', 'uglify', 'clone']);
+
+gulp.task('default', function() {
+    gulp.start('build');
+});
